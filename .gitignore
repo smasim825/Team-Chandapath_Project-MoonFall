@@ -1,0 +1,19 @@
+.DS_Store
+.vercel
+node_modules/
+dist/
+out/
+*.exe
+*.dmg
+*.AppImage
+*.zip
+*.log
+local_backup/
+
+# Backups, PDFs and temporary files
+*.bak
+*simulation*.json
+*Miftu*.pdf
+*miftu*.pdf
+*Full Dialogue Script*
+

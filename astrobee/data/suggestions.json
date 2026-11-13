@@ -1,0 +1,306 @@
+{
+ "missions": {
+  "_base": [
+   "What is my job?",
+   "Who are you?",
+   "Who is Neil Armstrong?"
+  ],
+  "crop": [
+   "What is the hydroponics mission about?",
+   "Why is regolith dangerous?",
+   "Is the chromium in Moon dust dangerous?"
+  ],
+  "final": [
+   "What is the final mission?",
+   "Who am I in the final mission?",
+   "Who is on the crew in the final mission?"
+  ],
+  "food": [
+   "What is the daily meal mission about?",
+   "Why does my meal use water and power?",
+   "How many calories does an astronaut need?"
+  ],
+  "ice": [
+   "What is the ISRU mission about?",
+   "What does ISRU mean?",
+   "Where does water on the Moon come from?"
+  ],
+  "power": [
+   "Why is power important?",
+   "How do solar panels work on the Moon?",
+   "Why do we need batteries?"
+  ],
+  "solar_storm": [
+   "What is a solar storm?",
+   "What are galactic cosmic rays?",
+   "What is the difference between SPE and GCR?"
+  ],
+  "waste": [
+   "What is the waste mission?"
+  ]
+ },
+ "steps": {
+  "crop.grow.1": [
+   "What do I do now?",
+   "What is the timelapse?",
+   "Why can't we just plant seeds in Moon dirt?"
+  ],
+  "crop.observe.day5": [
+   "What is the timelapse?",
+   "What is a control plant?"
+  ],
+  "crop.observe.day15": [
+   "What is the timelapse?",
+   "Why are the leaves turning red?"
+  ],
+  "crop.observe.day23": [
+   "What is the timelapse?",
+   "Is Moon soil like Earth soil?"
+  ],
+  "crop.report.end": [
+   "How do I finish the hydroponics mission?",
+   "Are my answers the same as the real study?"
+  ],
+  "final.briefing.1": [
+   "What are the underlined words?",
+   "Is the solar storm real?",
+   "What does the NASA video show?"
+  ],
+  "final.m2.3": [
+   "How do I do the shelter lockdown?"
+  ],
+  "final.m3.3": [
+   "How do I do the power routing task?"
+  ],
+  "final.m5.3": [
+   "How do I fix the water filter?",
+   "How does the space station recycle water?"
+  ],
+  "final.m6.3": [
+   "How do I set the light schedule?"
+  ],
+  "food.storage.1": [
+   "What do I do in the food storage room?"
+  ],
+  "food.storage.2": [
+   "What do I do in the food storage room?",
+   "Why is space food packed in layers?",
+   "Why is nitrogen put in food packages?"
+  ],
+  "food.choose.1": [
+   "Why can't I continue?",
+   "Which meal should I choose?",
+   "Why does my meal use water and power?"
+  ],
+  "food.complete.1": [
+   "How is my score calculated?"
+  ],
+  "ice.find_ice.2": [
+   "What do I do on the map?",
+   "Why is there ice in craters?"
+  ],
+  "ice.find_ice.3": [
+   "How do I scan for ice?"
+  ],
+  "ice.drill.2": [
+   "How do I use the drill?",
+   "What is the TRIDENT drill?",
+   "What happened to the real PRIME-1 mission?"
+  ],
+  "ice.extract.1": [
+   "Should I go to the lab?"
+  ],
+  "ice.oxygen.3": [
+   "What happens after the oxygen is ready?",
+   "Why keep the hydrogen?"
+  ],
+  "power.power_system.1": [
+   "What do I do in the power station?",
+   "Why is power important?"
+  ],
+  "power.power_system.2": [
+   "How do I do the power flow screen?"
+  ],
+  "power.restore_solar_array.2": [
+   "How do I clean the solar panel?"
+  ],
+  "solar_storm.storm_alert.1": [
+   "A solar storm started, what do I do?"
+  ],
+  "solar_storm.build_shield.1": [
+   "How do I build the radiation shield?",
+   "Why use food and water as a shield?",
+   "Does more material always mean more protection?"
+  ],
+  "crop.observe.size": [
+   "How big are the plants?"
+  ],
+  "crop.observe.color": [
+   "What color are the leaves?"
+  ],
+  "crop.observe.stress": [
+   "How stressed are the plants?"
+  ],
+  "crop.observe.growth": [
+   "How was the growth rate?"
+  ],
+  "final.m1.2": [
+   "Should I evacuate or secure the equipment?",
+   "Why is it dangerous to stay outside in a spacesuit?",
+   "What is safe mode?"
+  ],
+  "final.m2.2": [
+   "Which shelter option is best?",
+   "Why do regolith and water block radiation?",
+   "What does g/cm2 mean?"
+  ],
+  "final.m3.2": [
+   "Greenhouse off, backup power or brownout?",
+   "Why does draining the battery hurt the equipment?",
+   "Why does a brownout make the crew cold?"
+  ],
+  "final.m4.2": [
+   "Bottled O2 or electrolysis?",
+   "Why does electrolysis use so much power?"
+  ],
+  "final.m4.3": [
+   "How do I order the electrolysis cards?",
+   "Where does the hydrogen go?"
+  ],
+  "final.m5.2": [
+   "Which water option should I pick?",
+   "Why does melting ice take so much power?"
+  ],
+  "final.m6.2": [
+   "Should I save the crops or abandon them?",
+   "Why do plants need LED lights in space?"
+  ],
+  "final.m7.2": [
+   "Isolate, repair or reroute?",
+   "Did Sunita Williams really fix a power box?"
+  ],
+  "final.m8.2": [
+   "Hold shelter or controlled recovery?"
+  ],
+  "final.m8.3": [
+   "What should I report to Earth?",
+   "How long does the message take to reach Earth?"
+  ],
+  "final.ending.2": [
+   "Why did my mission fail?",
+   "Does 250 mSv cause radiation sickness?"
+  ],
+  "final.ending.1": [
+   "How can I get a better score?"
+  ],
+  "food.quiz.q1": [
+   "What is the answer to this question?"
+  ],
+  "food.quiz.q2": [
+   "What is the answer to this question?"
+  ],
+  "food.quiz.q3": [
+   "What is the answer to this question?"
+  ],
+  "food.quiz.q4": [
+   "What is the answer to this question?"
+  ],
+  "food.quiz.q5": [
+   "What is the answer to this question?"
+  ],
+  "ice.drill.1": [
+   "Which site should I drill?"
+  ],
+  "power.power_system.3": [
+   "How do I fill in the status report?"
+  ],
+  "power.restore_solar_array.1": [
+   "Why are the solar panels making less power?"
+  ],
+  "power.balance_the_grid.1": [
+   "What should I turn off when the battery is low?",
+   "What happens after I turn off the extra equipment?"
+  ],
+  "power.balance_the_grid.2": [
+   "What is the answer to the fission question?"
+  ],
+  "solar_storm.radiation_basics.1": [
+   "Which radiation is the more constant long-term hazard?"
+  ],
+  "solar_storm.shelter_safety.2": [
+   "How do I use the thickness slider?",
+   "Does more material always mean more protection?",
+   "Why cover the shelter with regolith?"
+  ],
+  "crop.safety.1": [
+   "Why is regolith dangerous?",
+   "Is the chromium in Moon dust dangerous?"
+  ],
+  "crop.intro.1": [
+   "Why can't we just plant seeds in Moon dirt?",
+   "What is hydroponics?"
+  ],
+  "crop.report.study": [
+   "What is a control plant?",
+   "Was this a real experiment?",
+   "What did the plant genes show?"
+  ],
+  "final.m1.1": [
+   "Why do we only have 30 minutes?"
+  ],
+  "final.m2.1": [
+   "What does g/cm2 mean?",
+   "How much radiation is too much?"
+  ],
+  "final.m4.1": [
+   "How much oxygen does the crew breathe?"
+  ],
+  "final.m5.1": [
+   "Why did dust clog the water filter?"
+  ],
+  "final.m8.1": [
+   "Is the storm over?",
+   "Is the regolith radioactive after the storm?"
+  ],
+  "food.prepare.1": [
+   "How is space food prepared?",
+   "What is Food Warmerable?"
+  ],
+  "food.prepare.2": [
+   "How is space food prepared?",
+   "What is Food Warmerable?"
+  ],
+  "ice.find_ice.1": [
+   "Where does water on the Moon come from?"
+  ],
+  "ice.analyze.1": [
+   "What is MSolo?",
+   "What happened to the real PRIME-1 mission?"
+  ],
+  "ice.extract.2": [
+   "How do you get water out of Moon ice?",
+   "How hot does the regolith get?"
+  ],
+  "ice.oxygen.1": [
+   "What is electrolysis?",
+   "Does electrolysis need a lot of power?",
+   "Which previous mission water?"
+  ],
+  "ice.oxygen.2": [
+   "How does the ISS make oxygen?"
+  ],
+  "solar_storm.radiation_basics.2": [
+   "How does Earth protect us from radiation?"
+  ],
+  "solar_storm.build_shield.2": [
+   "Why cover the shelter with regolith?"
+  ],
+  "solar_storm.shelter_safety.1": [
+   "Which building is safest in a solar storm?",
+   "What do astronauts do when a solar storm warning comes?"
+  ],
+  "final.m7.1": [
+   "What is happening in M7?"
+  ]
+ }
+}

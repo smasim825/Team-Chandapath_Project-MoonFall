@@ -1,0 +1,2496 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>MoonFall - Mission 2.2: Hydroponics</title>
+  <meta name="description"
+    content="Mission 2.2: Hydroponics - Test lunar regolith and automated hydroponic growth trays to cultivate food on the Moon.">
+
+  <!-- Retro Pixel Font matching 1.1 Power, 2.1 Daily Meal & 5.1 Radiation Missions -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+  <link rel="preload" href="assets/fonts/Jersey10.ttf" as="font" type="font/ttf" crossorigin>
+
+  <!-- Astro Bee LLM Chatbot Stylesheet -->
+  <link rel="stylesheet" href="astrobee/astrobee.css?v=20261103c">
+  <link rel="stylesheet" href="sidebar.css">
+  <link rel="stylesheet" href="missions-shared.css?v=20261105b">
+  <script src="game-assets.js?v=20261105b"></script>
+  <script src="responsive.js?v=20261110b" defer></script>
+
+  <!-- Scene 1 Critical Asset Preloads (Instant First-Paint Render) -->
+  <link rel="preload" href="assets/hydroponics/Group 1.webp" as="image" fetchpriority="high">
+  <link rel="preload" href="assets/hydroponics/CharacterPoses/Sunita_Williams_Wave.webp" as="image" fetchpriority="high">
+  <link rel="preload" href="assets/power/Astronaut_ThumbsUp.webp" as="image" fetchpriority="high">
+  <link rel="preload" href="assets/Rectangle 3.webp" as="image" fetchpriority="high">
+  <link rel="preload" href="assets/meal/Sunita_Badge.webp" as="image" fetchpriority="high">
+
+  <style>
+    /* ==========================================================================
+       CSS Variables & Reset (Exact match to 2.1 Daily Meal & 1.1 Power missions)
+       ========================================================================== */
+    @font-face {
+      font-family: 'Jersey 10';
+      src: url('assets/fonts/Jersey10.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --pixel-blue-border: #0099ff;
+      --pixel-cyan: #00e5ff;
+      --pixel-yellow: #fdcb0e;
+      --pixel-green: #22c55e;
+      --font-pixel: 'Jersey 10', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background-color: #000000;
+      overflow: hidden;
+      font-family: var(--font-pixel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Fullscreen Viewport Stage: Fills 100% width and height without black side bars */
+    .game-viewport {
+      position: relative;
+      width: 100vw;
+      width: 100dvw;
+      height: 100vh;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+      aspect-ratio: auto;
+      background: #000000;
+      overflow: hidden;
+    }
+
+    /* Scene Stage */
+    .game-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* Background Layer */
+    .bg-layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('assets/hydroponics/Group 1.webp');
+      background-size: cover;
+      background-position: center;
+      image-rendering: pixelated;
+      image-rendering: -webkit-optimize-contrast;
+      transition: background-image 0.4s ease, filter 0.4s ease;
+      z-index: 1;
+    }
+
+    /* Dark Overlay for Transitions & Timelapse */
+    .dark-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.72);
+      z-index: 22;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .dark-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Characters: Sunita Williams (Left Side) */
+    .character-sunita {
+      position: absolute;
+      bottom: 0;
+      left: 1.5%;
+      height: clamp(280px, 57vh, 560px);
+      width: auto;
+      pointer-events: none;
+      z-index: 30;
+      display: flex;
+      align-items: flex-end;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .character-sunita img {
+      height: 100%;
+      width: auto;
+      max-height: 100%;
+      max-width: none;
+      object-fit: contain;
+      object-position: bottom left;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.8));
+      image-rendering: pixelated;
+    }
+
+    /* Character: White Astronaut (Right Side) */
+    .character-astronaut {
+      position: absolute;
+      bottom: 0;
+      right: 3.5%;
+      height: clamp(280px, 57vh, 560px);
+      width: auto;
+      pointer-events: none;
+      z-index: 10;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .character-astronaut img {
+      height: 100%;
+      width: auto;
+      max-height: 100%;
+      max-width: none;
+      object-fit: contain;
+      object-position: bottom right;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.8));
+      image-rendering: pixelated;
+    }
+
+    /* ==========================================================================
+       Airlock Back-View Characters (Scenes 4 & 5 - image 129 & 130)
+       ========================================================================== */
+    .airlock-characters-container {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 12;
+      transition: opacity 0.3s ease;
+    }
+
+    .airlock-sunita-back {
+      position: absolute;
+      bottom: -1%;
+      left: 11%;
+      height: 59%;
+      width: auto;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .airlock-sunita-back img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.8));
+    }
+
+    .airlock-astronaut-back {
+      position: absolute;
+      bottom: -1%;
+      right: 7%;
+      height: 60%;
+      width: auto;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+
+    .airlock-astronaut-back img {
+      height: 100%;
+      width: auto;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.8));
+    }
+
+    /* ==========================================================================
+       Scenes 6 & 7: Toxic Regolith Surface Overlays (R.png & tOXIC_cOMPONENTS.webp)
+       ========================================================================== */
+    .toxic-surface-overlays {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+      transition: opacity 0.3s ease;
+    }
+
+    .hazard-skull-badge {
+      position: absolute;
+      top: 13.5%;
+      left: 5%;
+      width: 8.5%;
+      max-width: 115px;
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hazard-skull-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 4px 16px rgba(255, 0, 0, 0.6));
+    }
+
+    .toxic-components-panel {
+      position: absolute;
+      top: 13.5%;
+      right: 16%;
+      height: 47%;
+      width: auto;
+      aspect-ratio: 644 / 1145;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toxic-components-panel img {
+      height: 100%;
+      width: 100%;
+      object-fit: fill;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.85));
+    }
+
+    /* ==========================================================================
+       Scene 2: Regolith + Hydroponics Card (Frame 13.png)
+       ========================================================================== */
+    .regolith-card-container {
+      position: absolute;
+      top: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 44%;
+      max-width: 720px;
+      aspect-ratio: 1855 / 802;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      animation: pop-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .regolith-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.85));
+    }
+
+    /* ==========================================================================
+       Scene 10: Interactive Red START Button with Dark Focus Backdrop
+       ========================================================================== */
+    .start-button-container {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 45%, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0.88) 45%, rgba(0, 0, 0, 0.96) 100%);
+      z-index: 28;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      cursor: pointer;
+    }
+
+    .retro-start-btn {
+      background: linear-gradient(180deg, #ff4d5a 0%, #d81c2b 50%, #8c0c16 100%);
+      border: 3.5px solid #222b35;
+      outline: 3px solid #ff4d5a;
+      border-radius: 8px;
+      padding: 14px 44px;
+      color: #ffffff;
+      font-family: var(--font-pixel);
+      font-size: clamp(2.2rem, 4.2vw, 4.2rem);
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.85),
+        0 0 32px rgba(255, 45, 60, 0.9),
+        inset 0 3px 6px rgba(255, 255, 255, 0.4),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.6);
+      text-shadow: 2px 2px 0 #500000;
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: start-pulse 1.8s infinite ease-in-out;
+    }
+
+    .retro-start-btn:hover {
+      transform: scale(1.08);
+      filter: brightness(1.15);
+      box-shadow:
+        0 14px 35px rgba(0, 0, 0, 0.9),
+        0 0 38px rgba(255, 45, 60, 1),
+        inset 0 3px 8px rgba(255, 255, 255, 0.6);
+    }
+
+    .retro-start-btn:active {
+      transform: scale(0.96);
+      filter: brightness(0.95);
+    }
+
+    @keyframes start-pulse {
+      0%, 100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+    }
+
+    /* ==========================================================================
+       Scene 11: Animated Timelapse Overlay
+       ========================================================================== */
+    .timelapse-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(0, 20, 45, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);
+      z-index: 28;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .timelapse-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .timelapse-title {
+      font-family: var(--font-pixel);
+      font-size: clamp(1.8rem, 3.4vw, 3.6rem);
+      color: #00e5ff;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(0, 229, 255, 0.8);
+      margin-bottom: 12px;
+      animation: pulse-glow 1s infinite alternate;
+    }
+
+    .timelapse-day-counter {
+      font-family: var(--font-pixel);
+      font-size: clamp(3.2rem, 7.5vw, 7.8rem);
+      color: #fdcb0e;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 30px rgba(253, 203, 14, 0.9), 3px 3px 0 #000;
+    }
+
+    .timelapse-progress-bar {
+      width: 44%;
+      height: 14px;
+      background: rgba(2, 28, 62, 0.85);
+      border: 2px solid var(--pixel-blue-border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 20px;
+      box-shadow: 0 0 16px rgba(0, 153, 255, 0.5);
+    }
+
+    .timelapse-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #00e5ff, #fdcb0e);
+      transition: width 0.1s linear;
+    }
+
+    /* ==========================================================================
+       HUD Badges: "X Days Passed" & "Earth Grown"
+       ========================================================================== */
+    .hud-days-badge {
+      position: absolute;
+      top: clamp(42px, 11.5vh, 62px);
+      right: clamp(76px, 8.5vw, 116px);
+      background: rgba(18, 25, 34, 0.94);
+      border: 2px solid #5a6e82;
+      border-radius: 6px;
+      padding: 3px 14px;
+      color: #ffffff;
+      font-family: var(--font-pixel);
+      font-size: clamp(0.9rem, 1.55vw, 1.45rem);
+      letter-spacing: 0.05em;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.75);
+      z-index: 15;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-callout-earth {
+      position: absolute;
+      top: 18%;
+      left: 11%;
+      transform: translateX(-50%);
+      z-index: 18;
+      pointer-events: none;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      animation: earth-float 2.4s ease-in-out infinite alternate;
+    }
+
+    @keyframes earth-float {
+      0% {
+        transform: translate(-50%, 0);
+      }
+      100% {
+        transform: translate(-50%, -7px);
+      }
+    }
+
+    .callout-bubble {
+      position: relative;
+      background: #ffffff;
+      border: 2.5px solid var(--pixel-blue-border);
+      border-radius: 6px;
+      padding: 3px 14px;
+      color: #0284c7;
+      font-family: var(--font-pixel);
+      font-size: clamp(1.15rem, 1.9vw, 1.75rem);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 12px rgba(0, 153, 255, 0.35);
+      white-space: nowrap;
+    }
+
+    .callout-pointer-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: -2px;
+      filter: drop-shadow(0 2px 8px rgba(0, 229, 255, 0.6));
+    }
+
+    .callout-pointer-svg {
+      width: 24px;
+      height: clamp(80px, 12.5vh, 125px);
+      display: block;
+      overflow: visible;
+    }
+
+    .pointer-arrowhead {
+      animation: arrow-bounce 1.2s ease-in-out infinite alternate;
+      transform-origin: 12px 84px;
+    }
+
+    @keyframes arrow-bounce {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(5px);
+      }
+    }
+
+    /* ==========================================================================
+       MCQ Quiz Stage Box (Scenes 13, 15, 17, 20)
+       Exact match to previous missions (Mission 2.1 & 1.1) and user reference
+       ========================================================================== */
+    .mcq-stage-box {
+      position: absolute;
+      top: 22%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 78%;
+      max-width: 1200px;
+      min-height: 32%;
+      background: rgba(2, 28, 62, 0.88);
+      border: 3.5px solid var(--pixel-blue-border);
+      border-radius: 14px;
+      box-shadow:
+        0 8px 30px rgba(0, 0, 0, 0.8),
+        inset 0 0 16px rgba(0, 153, 255, 0.3),
+        0 0 20px rgba(0, 153, 255, 0.4);
+      padding: 16px 24px;
+      box-sizing: border-box;
+      z-index: 30;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      animation: mcq-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      cursor: default;
+    }
+
+    @keyframes mcq-pop {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -15px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+    }
+
+    /* Robot Floating at Top Left of MCQ Box */
+    .mcq-robot-avatar {
+      position: absolute;
+      top: -24px;
+      left: -20px;
+      width: 78px;
+      height: 80px;
+      z-index: 35;
+      pointer-events: none;
+    }
+
+    .mcq-robot-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+    }
+
+    /* Speaker Pill attached next to robot */
+    .mcq-speaker-pill {
+      position: absolute;
+      top: -18px;
+      left: 64px;
+      background: #ffffff;
+      border: 2.5px solid var(--pixel-blue-border);
+      border-radius: 6px;
+      padding: 1px 16px;
+      color: #0284c7;
+      font-family: var(--font-pixel);
+      font-size: clamp(1.1rem, 2vw, 1.85rem);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+      z-index: 30;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    /* MCQ Question Header - Bright Cyan */
+    .mcq-question-title {
+      color: #00e5ff;
+      font-family: var(--font-pixel);
+      font-size: clamp(1.2rem, 2.35vw, 2.3rem);
+      line-height: 1.25;
+      letter-spacing: 0.02em;
+      margin: 0 0 14px 62px;
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+    }
+
+    /* Options List */
+    .mcq-options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-left: 62px;
+      width: calc(100% - 62px);
+    }
+
+    .mcq-option-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      width: fit-content;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .mcq-option-item:hover:not(.locked) {
+      background: rgba(0, 153, 255, 0.2);
+      transform: translateX(4px);
+    }
+
+    .mcq-checkbox {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #ffffff;
+      border-radius: 4px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .mcq-checkbox.checked {
+      background: #0099ff;
+      border-color: #0099ff;
+      box-shadow: 0 0 10px #0099ff;
+    }
+
+    .mcq-checkbox.checked::after {
+      content: '✓';
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .mcq-option-text {
+      color: #ffffff;
+      font-family: var(--font-pixel);
+      font-size: clamp(1.15rem, 2.2vw, 2.15rem);
+      line-height: 1.2;
+      letter-spacing: 0.015em;
+      transition: color 0.2s;
+    }
+
+    /* Feedback Colors */
+    .mcq-option-item.state-correct {
+      background: rgba(0, 230, 118, 0.2) !important;
+      border-color: rgba(0, 230, 118, 0.5) !important;
+    }
+
+    .mcq-option-item.state-correct .mcq-option-text {
+      color: #00e676 !important;
+      font-weight: bold;
+      text-shadow: 0 0 12px rgba(0, 230, 118, 0.6);
+    }
+
+    .mcq-option-item.state-correct .mcq-checkbox {
+      background: #00e676;
+      border-color: #00e676;
+      box-shadow: 0 0 10px #00e676;
+    }
+
+    .mcq-option-item.state-wrong {
+      background: rgba(255, 51, 68, 0.2) !important;
+      border-color: rgba(255, 51, 68, 0.5) !important;
+      animation: option-shake 0.4s ease;
+    }
+
+    .mcq-option-item.state-wrong .mcq-option-text {
+      color: #ff3344 !important;
+      font-weight: bold;
+      text-shadow: 0 0 12px rgba(255, 51, 68, 0.6);
+    }
+
+    @keyframes option-shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* ==========================================================================
+       Dialogue Dock Footer (Exact match to 2.1 Daily Meal & 1.1 Power Image 3)
+       ========================================================================== */
+    .dialogue-wrapper {
+      position: absolute;
+      bottom: 4.8%;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 25;
+      padding: 0 3%;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* Sunita Box (Exact match to 1.1 Power Mission Rectangle 3 + Floating Speaker Badge) */
+    .dialogue-box.scene-1-box {
+      position: relative;
+      width: 84%;
+      max-width: 1360px;
+      aspect-ratio: 2813 / 378;
+      min-height: clamp(72px, 19.5vh, 110px);
+      display: flex;
+      align-items: center;
+      padding: 0;
+      box-sizing: border-box;
+      margin-left: 7%;
+      margin-right: 1.5%;
+    }
+
+    .scene-1-box .dialogue-bg-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+      filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.5));
+    }
+
+    .scene-1-box .speaker-badge {
+      position: absolute;
+      top: -16.5%;
+      left: 7.5%;
+      width: 19.5%;
+      aspect-ratio: 566 / 127;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 35;
+      pointer-events: none;
+    }
+
+    .speaker-badge-img {
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+      image-rendering: pixelated;
+    }
+
+    /* Skip Button matching 1.1 Power Mission */
+    .scene-1-box .skip-btn {
+      position: absolute;
+      top: -16.5%;
+      right: 3.2%;
+      width: 13.4%;
+      aspect-ratio: 376 / 127;
+      display: block;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      z-index: 50;
+      pointer-events: auto;
+      padding: 0;
+      outline: none;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .scene-1-box .skip-btn:hover {
+      transform: scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .scene-1-box .skip-btn:active {
+      transform: scale(0.97);
+    }
+
+    .skip-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+      image-rendering: pixelated;
+    }
+
+    .skip-icon {
+      position: absolute;
+      left: 12.8%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 26.3%;
+      height: auto;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    /* Dialogue Content: full interior height matching 1.1 Power Mission */
+    .scene-1-box .dialogue-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      padding: 12px 3.5% 8px 9%;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .scene-1-box .dialogue-text {
+      font-family: var(--font-pixel);
+      font-size: clamp(1.15rem, 2.3vw, 2.5rem);
+      font-weight: 400;
+      line-height: 1.12;
+      color: #000000;
+      white-space: normal;
+      word-break: normal;
+      letter-spacing: 0.015em;
+      text-shadow: none;
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: grayscale;
+      image-rendering: pixelated;
+      margin: 0;
+      width: 100%;
+    }
+
+    /* Astro Bee Dialogue Box (Frame 6.png - for Scene 21 & Mission Complete) */
+    .dialogue-box.scene-2-box {
+      position: relative;
+      width: 81.4%;
+      max-width: 1300px;
+      aspect-ratio: 2610 / 248;
+      min-height: clamp(82px, 15vh, 108px);
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .scene-2-box .dialogue-bg-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+      filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.65));
+    }
+
+    .robot-avatar-container {
+      position: absolute;
+      left: 0.5%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14.5%;
+      aspect-ratio: 374 / 386;
+      z-index: 36;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      animation: robot-hover 3s ease-in-out infinite alternate;
+    }
+
+    .robot-avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.7));
+    }
+
+    @keyframes robot-hover {
+      0% {
+        transform: translateY(-50%) rotate(0deg);
+      }
+
+      50% {
+        transform: translateY(calc(-50% - 5px)) rotate(-0.5deg);
+      }
+
+      100% {
+        transform: translateY(calc(-50% + 4px)) rotate(0.5deg);
+      }
+    }
+
+    .scene-2-box .astro-bee-badge {
+      position: absolute;
+      top: -46%;
+      left: 13.5%;
+      width: 17.2%;
+      aspect-ratio: 449 / 134;
+      z-index: 35;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .astro-badge-img {
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+      image-rendering: pixelated;
+    }
+
+    .scene-2-box .skip-btn {
+      position: absolute;
+      top: 0;
+      transform: translateY(-50%);
+      right: 2.8%;
+      width: 14.4%;
+      aspect-ratio: 376 / 127;
+      display: block;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      z-index: 50;
+      pointer-events: auto;
+      padding: 0;
+      outline: none;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .scene-2-box .skip-btn:hover {
+      transform: translateY(-50%) scale(1.04);
+      filter: brightness(1.08);
+    }
+
+    .scene-2-box .skip-btn:active {
+      transform: translateY(-50%) scale(0.97);
+    }
+
+    .scene-2-box .dialogue-content {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      height: 100%;
+      padding-left: 16%;
+      padding-right: 16%;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .scene-2-box .dialogue-text {
+      font-family: var(--font-pixel);
+      font-size: clamp(1.2rem, 2.1vw, 2.45rem) !important;
+      font-weight: 400;
+      line-height: 1.1;
+      color: #fdcb0e !important;
+      letter-spacing: 0.02em;
+      white-space: normal;
+      word-break: normal;
+      text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9);
+      -webkit-font-smoothing: none;
+      -moz-osx-font-smoothing: grayscale;
+      image-rendering: pixelated;
+      margin: 0;
+      width: 100%;
+      transition: font-size 0.12s ease;
+    }
+
+    .scene-2-box .dialogue-text.text-short {
+      font-size: clamp(1.35rem, 2.5vw, 2.7rem);
+      line-height: 1.12;
+    }
+
+    .scene-2-box .dialogue-text.text-medium {
+      font-size: clamp(1.2rem, 2.25vw, 2.45rem);
+      line-height: 1.1;
+    }
+
+    .scene-2-box .dialogue-text.text-long {
+      font-size: clamp(1.15rem, 2.1vw, 2.28rem);
+      line-height: 1.08;
+    }
+
+    /* Top HUD */
+    .top-hud {
+      position: absolute;
+      top: max(20px, calc(env(safe-area-inset-top) + 12px));
+      left: 14px;
+      right: clamp(96px, 8.5vw, 116px);
+      z-index: 1000;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+    }
+
+    .top-hud > * {
+      pointer-events: auto;
+    }
+
+    @media (max-width: 900px), (max-height: 500px) {
+      .top-hud {
+        top: max(18px, calc(env(safe-area-inset-top) + 10px));
+        right: max(72px, calc(64px + env(safe-area-inset-right)));
+      }
+    }
+
+    .hud-title-badge {
+      background: rgba(0, 10, 30, 0.75);
+      border: 1.5px solid var(--pixel-blue-border);
+      border-radius: 6px;
+      padding: 5px 14px;
+      min-height: 38px;
+      display: inline-flex;
+      align-items: center;
+      color: #ffffff;
+      font-size: clamp(0.95rem, 1.6vw, 1.35rem);
+      letter-spacing: 0.05em;
+      pointer-events: auto;
+    }
+
+    .hud-btn {
+      background: rgba(0, 10, 30, 0.75);
+      border: 1.5px solid var(--pixel-blue-border);
+      border-radius: 6px;
+      padding: 6px 14px;
+      min-height: 38px;
+      color: #7dd3fc;
+      font-family: var(--font-pixel);
+      font-size: clamp(0.95rem, 1.6vw, 1.35rem);
+      cursor: pointer;
+      pointer-events: auto;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(0, 229, 255, 0.3);
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .hud-btn:hover {
+      background: #0284c7;
+      color: #ffffff;
+      border-color: #38bdf8;
+    }
+
+    .hud-home-icon {
+      width: clamp(15px, 1.3vw, 19px);
+      height: clamp(15px, 1.3vw, 19px);
+      fill: currentColor;
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: -1px;
+    }
+
+    /* ==========================================================================
+       Mission Complete Overlay (Exact match to 1.1 Power & 2.1 Daily Meal)
+       ========================================================================== */
+    .mission-complete-overlay {
+      position: absolute;
+      top: 9%;
+      left: 50%;
+      transform: translate(-50%, 0);
+      width: 82%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      pointer-events: auto;
+      animation: modal-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes modal-fade-in {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -20px) scale(0.96);
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+    }
+
+    .mission-complete-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 950px;
+      gap: 1.2vw;
+    }
+
+    .mission-complete-title {
+      width: 76%;
+      max-width: 820px;
+      height: auto;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.85));
+      margin-bottom: 6px;
+      animation: title-float 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes title-float {
+      0% {
+        transform: translateY(0);
+      }
+
+      100% {
+        transform: translateY(-4px);
+      }
+    }
+
+    .circle-score-wrapper {
+      position: relative;
+      margin: 8px 0 6px 0;
+    }
+
+    .circle-score-box {
+      position: relative;
+      width: clamp(150px, 16.5vw, 215px);
+      height: clamp(150px, 16.5vw, 215px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-circular-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.75));
+    }
+
+    .score-circle-bg {
+      fill: rgba(2, 24, 55, 0.92);
+      stroke: rgba(0, 153, 255, 0.22);
+      stroke-width: 9.5;
+    }
+
+    .score-circle-progress {
+      fill: none;
+      stroke: #22c55e;
+      stroke-width: 9.5;
+      stroke-linecap: round;
+      stroke-dasharray: 314.16;
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+      filter: drop-shadow(0 0 14px rgba(34, 197, 94, 0.85));
+    }
+
+    .circle-score-content {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .circle-score-num {
+      font-family: var(--font-pixel);
+      font-size: clamp(2.5rem, 4.6vw, 4.8rem);
+      color: #22c55e;
+      font-weight: 400;
+      text-shadow: 0 0 14px rgba(34, 197, 94, 0.85);
+    }
+
+    .circle-score-sub {
+      font-family: var(--font-pixel);
+      font-size: clamp(0.95rem, 1.45vw, 1.45rem);
+      color: #94a3b8;
+      letter-spacing: 0.12em;
+      margin-top: 4px;
+    }
+
+    .mission-complete-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5vw;
+      width: 88%;
+      margin-top: 4px;
+    }
+
+    .mission-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+      outline: none;
+      transition: transform 0.15s ease, filter 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mission-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      filter: brightness(1.15) drop-shadow(0 0 14px rgba(3, 143, 243, 0.7));
+    }
+
+    .mission-btn:active {
+      transform: scale(0.96);
+    }
+
+    .mission-btn img {
+      height: clamp(34px, 5vw, 62px);
+      width: auto;
+      object-fit: contain;
+      image-rendering: pixelated;
+      display: block;
+      filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.6));
+    }
+
+    /* Helper Utilities */
+    .hidden {
+      display: none !important;
+    }
+
+    @keyframes pop-in {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -8px) scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+      }
+    }
+
+    @keyframes box-pop {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes pulse-glow {
+      from {
+        text-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+      }
+      to {
+        text-shadow: 0 0 25px rgba(0, 229, 255, 1);
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="mobile.css?v=20261111_fix7" media="screen and (max-width: 1024px), screen and (max-height: 550px)">
+</head>
+
+<body>
+  <aside class="orientation-banner" id="orientationBanner" role="dialog" aria-modal="true" aria-label="Rotate device">
+    <div class="orientation-card">
+      <div class="phone-rotate-icon" aria-hidden="true">&#8635;</div>
+      <div class="orientation-title">ROTATE YOUR PHONE</div>
+      <p class="orientation-desc">Please rotate your phone horizontally to <strong>landscape mode</strong> to play.</p>
+    </div>
+  </aside>
+  <main class="game-viewport" id="gameViewport">
+    <div class="game-stage">
+      <!-- Background Layer -->
+      <div class="bg-layer" id="bgLayer"></div>
+
+      <!-- Top HUD -->
+      <header class="top-hud">
+        <div class="hud-title-badge" id="hudMissionTitle">🌱 MISSION 2.2: HYDROPONICS LAB</div>
+        <div style="display:flex; gap:8px;">
+          <button class="hud-btn" id="soundBtn" onclick="toggleSound()" title="Toggle Sound">
+            <svg class="hud-svg-icon" id="soundSvg" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            <span id="soundText">SOUND</span>
+          </button>
+          <button class="hud-btn" id="restartBtn" onclick="restartMission()" title="Restart Mission" aria-label="Restart Mission">
+            <svg class="hud-svg-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+            <span>RESTART</span>
+          </button>
+          <button class="hud-btn" onclick="returnToBase()" title="Return to Main Base" aria-label="Return to Main Base">
+            <svg class="hud-home-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+            <span>MAIN BASE</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Mission Entry Sci-Fi Transition Overlay -->
+      <div class="mission-entry-transition" id="entryTransition" onclick="dismissEntryTransition()" role="dialog" aria-label="Mission Entry Transition" title="Click anywhere to skip">
+        <div class="entry-door entry-door-left">
+          <div class="entry-door-panel"></div>
+          <div class="entry-door-decal">SECTOR 02 // AIRLOCK L-2B</div>
+          <div class="entry-hazard-stripe"></div>
+        </div>
+        <div class="entry-door entry-door-right">
+          <div class="entry-door-panel"></div>
+          <div class="entry-door-decal">LUNAR OUTPOST // D-GREENHOUSE</div>
+          <div class="entry-hazard-stripe"></div>
+        </div>
+        <div class="entry-hud-badge" id="entryBadge">
+          <div class="entry-badge-status">
+            <span class="entry-pulse-dot"></span>
+            <span>PRESSURIZING AIRLOCK // SYS-NOMINAL</span>
+          </div>
+          <h2 class="entry-badge-title">🌱 MISSION 2.2: HYDROPONICS LAB</h2>
+          <div class="entry-badge-sub">CLOSED-LOOP BIOMASS &amp; CROP SYSTEMS</div>
+          <div class="entry-scan-bar"><div class="entry-scan-fill"></div></div>
+          <div class="entry-skip-hint">TAP ANYWHERE TO SKIP ⏭</div>
+        </div>
+      </div>
+
+      <!-- Dark Overlay -->
+      <div class="dark-overlay" id="darkOverlay"></div>
+
+      <!-- Character: Sunita Williams (Left) -->
+      <div class="character-sunita" id="charSunita">
+        <img src="assets/hydroponics/CharacterPoses/Sunita_Williams_Wave.webp" alt="Sunita Williams" id="sunitaImg" fetchpriority="high">
+      </div>
+
+      <!-- Character: White Astronaut (Right) -->
+      <div class="character-astronaut" id="charAstronaut">
+        <img src="assets/power/Astronaut_ThumbsUp.webp" alt="Astronaut" id="astronautImg" fetchpriority="high">
+      </div>
+
+      <!-- Airlock Back-view Characters (Scenes 4 & 5 - image 129 & 130) -->
+      <div class="airlock-characters-container hidden" id="airlockCharacters">
+        <div class="airlock-sunita-back">
+          <img src="assets/hydroponics/image 129.webp" alt="Sunita Williams Back View" loading="lazy" decoding="async">
+        </div>
+        <div class="airlock-astronaut-back">
+          <img src="assets/hydroponics/image 130.webp" alt="Astronaut Back View" loading="lazy" decoding="async">
+        </div>
+      </div>
+
+      <!-- Surface Regolith Overlays (Scenes 6 & 7: R.png top-left, tOXIC_cOMPONENTS.webp on right) -->
+      <div class="toxic-surface-overlays hidden" id="toxicSurfaceOverlays">
+        <div class="hazard-skull-badge">
+          <img src="assets/hydroponics/R.webp" alt="Danger Skull" loading="lazy" decoding="async">
+        </div>
+        <div class="toxic-components-panel">
+          <img src="assets/hydroponics/tOXIC_cOMPONENTS.webp" alt="Toxic Components" loading="lazy" decoding="async">
+        </div>
+      </div>
+
+      <!-- Scene 2: Regolith + Hydroponics Card (Frame 13.png) -->
+      <div class="regolith-card-container hidden" id="regolithCard">
+        <img src="assets/hydroponics/Frame 13.webp" alt="Regolith + Hydroponics" class="regolith-card-img" loading="lazy" decoding="async">
+      </div>
+
+      <!-- Scene 10: Interactive Red START Button -->
+      <div class="start-button-container hidden" id="startButtonContainer">
+        <button class="retro-start-btn" id="startTimelapseBtn" onclick="initiateTimelapse()">
+          <span>START</span>
+        </button>
+      </div>
+
+      <!-- Scene 11: Animated Timelapse Overlay -->
+      <div class="timelapse-overlay" id="timelapseOverlay">
+        <div class="timelapse-title">GROWTH ACCELERATION TIMELAPSE</div>
+        <div class="timelapse-day-counter" id="timelapseCounter">DAY 0</div>
+        <div class="timelapse-progress-bar">
+          <div class="timelapse-progress-fill" id="timelapseFill"></div>
+        </div>
+      </div>
+
+      <!-- HUD Days Passed Badge (Scenes 12-18) -->
+      <div class="hud-days-badge hidden" id="hudDaysBadge">
+        <span id="hudDaysText">5 Days Passed</span>
+      </div>
+
+      <!-- HUD Earth Grown Callout with Direct Pointer Line to Plant (Scenes 12-17) -->
+      <div class="hud-callout-earth hidden" id="hudEarthCallout">
+        <div class="callout-bubble">Earth Grown</div>
+        <div class="callout-pointer-container">
+          <svg class="callout-pointer-svg" viewBox="0 0 24 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Triangular notch right beneath speech bubble -->
+            <polygon points="6,0 18,0 12,8" fill="#ffffff" stroke="#0099ff" stroke-width="2" />
+            <line x1="6" y1="0" x2="18" y2="0" stroke="#ffffff" stroke-width="3" />
+            <!-- Glowing dashed HUD pointer line extending down to green plant -->
+            <line x1="12" y1="8" x2="12" y2="74" stroke="#00e5ff" stroke-width="2.5" stroke-dasharray="5 3" />
+            <!-- Animated Arrowhead pointing directly at the green leaves -->
+            <g class="pointer-arrowhead">
+              <polygon points="4,70 12,92 20,70" fill="#00e5ff" stroke="#0099ff" stroke-width="1.5" />
+              <polygon points="7,72 12,87 17,72" fill="#ffffff" />
+              <circle cx="12" cy="92" r="2.5" fill="#ffffff" />
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Astro Bee Interactive MCQ Stage Box (Scenes 13, 15, 17, 20) -->
+      <section class="mcq-stage-box hidden" id="questionWrapper" aria-label="Astro Bee Question Box">
+        <!-- Robot Avatar on the left -->
+        <div class="mcq-robot-avatar">
+          <img src="assets/power/Pragyan_ShivShakti_Neutral.webp" alt="Astro Bee" class="robot-avatar-img" loading="lazy" decoding="async">
+        </div>
+        <!-- Speaker Pill -->
+        <div class="mcq-speaker-pill">Astro Bee</div>
+
+        <!-- Question Title -->
+        <h3 class="mcq-question-title" id="questionPrompt"></h3>
+
+        <!-- Options Group -->
+        <div class="mcq-options-list" id="questionOptionsGroup"></div>
+      </section>
+
+      <!-- Dialogue Dock Footer (Standard Sunita & Astro Bee Boxes) -->
+      <footer class="dialogue-wrapper" id="dialogueWrapper">
+        <!-- Sunita Williams Dialogue Box -->
+        <div class="dialogue-box scene-1-box" id="dialogueBoxSunita" onclick="handleDialogueClick()">
+          <div class="speaker-badge" id="speakerBadgeSunita">
+            <img src="assets/meal/Sunita_Badge.webp" alt="Sunita Williams" class="speaker-badge-img">
+          </div>
+          <button class="skip-btn" onclick="event.stopPropagation(); handleActionBtnClick()" title="Next Scene"
+            aria-label="Skip to Next Scene">
+            <img src="assets/Caption Text-1.webp" alt="SKIP" class="skip-bg">
+            <img src="assets/Vector 6.webp" alt="" class="skip-icon" aria-hidden="true">
+          </button>
+          <img src="assets/Rectangle 3.webp" alt="" class="dialogue-bg-img" aria-hidden="true">
+          <div class="dialogue-content" id="dialogueContentSunita">
+            <p class="dialogue-text" id="dialogueTextSunita"></p>
+          </div>
+        </div>
+
+        <!-- Astro Bee Dialogue Box (Frame 6.png - for Scene 21 & Complete) -->
+        <div class="dialogue-box scene-2-box hidden" id="dialogueBoxAstroBee" onclick="handleDialogueClick()">
+          <div class="robot-avatar-container">
+            <img src="assets/power/Pragyan_ShivShakti_Neutral.webp" alt="Astro Bee" class="robot-avatar-img" loading="lazy" decoding="async">
+          </div>
+          <div class="astro-bee-badge">
+            <img src="assets/scene 3/Frame 7.webp" alt="Astro Bee" class="astro-badge-img">
+          </div>
+          <button class="skip-btn" onclick="event.stopPropagation(); handleActionBtnClick()" title="Next Scene"
+            aria-label="Skip to Next Scene">
+            <img src="assets/Caption Text-1.webp" alt="SKIP" class="skip-bg">
+            <img src="assets/Vector 6.webp" alt="" class="skip-icon" aria-hidden="true">
+          </button>
+          <img src="assets/scene 3/Frame 6.webp" alt="" class="dialogue-bg-img" aria-hidden="true">
+          <div class="dialogue-content" id="dialogueContentAstroBee">
+            <p class="dialogue-text" id="dialogueTextAstroBee"></p>
+          </div>
+        </div>
+      </footer>
+
+      <!-- Mission Complete Overlay -->
+      <div class="mission-complete-overlay hidden" id="missionCompleteOverlay">
+        <div class="mission-complete-container">
+          <img src="assets/Mission Complete.webp" alt="Mission Complete" class="mission-complete-title">
+
+          <!-- Circular Verification Score Box -->
+          <div class="circle-score-wrapper">
+            <div class="circle-score-box">
+              <svg class="score-circular-svg" viewBox="0 0 120 120">
+                <circle class="score-circle-bg" cx="60" cy="60" r="50"></circle>
+                <circle class="score-circle-progress" id="scoreCircleProgress" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <div class="circle-score-content">
+                <span class="circle-score-num" id="circleScoreNum">100%</span>
+                <span class="circle-score-sub">SCORE</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mission-complete-buttons">
+            <button class="mission-btn btn-try-again" onclick="restartMission()" title="Try Again"
+              aria-label="Try Again">
+              <img src="assets/Frame 25.webp" alt="Try Again">
+            </button>
+            <button class="mission-btn btn-home" onclick="returnToBase()" title="Home" aria-label="Home">
+              <img src="assets/Frame 26.webp" alt="Home">
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    /* ==========================================================================
+       Sound Synthesizer (Web Audio API - Offline & Instant)
+       ========================================================================== */
+    class AudioSynthesizer {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTypewriterClick() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(540 + Math.random() * 80, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.015, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.04);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.04);
+        } catch (e) { }
+      }
+
+      playDialogueAdvance() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(420, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(640, this.ctx.currentTime + 0.09);
+          gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.09);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.09);
+        } catch (e) { }
+      }
+
+      playCorrect() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+            gain.gain.setValueAtTime(0.08, now + idx * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + 0.25);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + idx * 0.08);
+            osc.stop(now + idx * 0.08 + 0.25);
+          });
+        } catch (e) { }
+      }
+
+      playWrong() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.linearRampToValueAtTime(110, now + 0.3);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } catch (e) { }
+      }
+
+      playTimelapseTick() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800 + Math.random() * 200, this.ctx.currentTime);
+          gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.05);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.05);
+        } catch (e) { }
+      }
+
+      playFanfare() {
+        if (this.muted) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          const notes = [
+            { f: 523.25, d: 0.14 },
+            { f: 659.25, d: 0.14 },
+            { f: 783.99, d: 0.14 },
+            { f: 1046.5, d: 0.45 }
+          ];
+          let time = now;
+          notes.forEach(n => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(n.f, time);
+            gain.gain.setValueAtTime(0.12, time);
+            gain.gain.exponentialRampToValueAtTime(0.001, time + n.d);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(time);
+            osc.stop(time + n.d);
+            time += n.d * 0.85;
+          });
+        } catch (e) { }
+      }
+    }
+
+    const audio = new AudioSynthesizer();
+    const sound = audio;
+    window.sound = sound;
+    window.audio = audio;
+
+    const SVG_SOUND_ON = '<path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
+    const SVG_SOUND_OFF = '<path fill="currentColor" d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>';
+
+    function toggleSound() {
+      audio.muted = !audio.muted;
+      const soundSvg = document.getElementById('soundSvg');
+      const soundText = document.getElementById('soundText');
+      if (soundSvg) {
+        soundSvg.innerHTML = audio.muted ? SVG_SOUND_OFF : SVG_SOUND_ON;
+      }
+      if (soundText) {
+        soundText.textContent = audio.muted ? 'MUTED' : 'SOUND';
+      }
+    }
+
+    /* ==========================================================================
+       Mission 2.2 Storyboard Scene Definitions (Scenes 1 to 21 + Complete)
+       ========================================================================== */
+    const scenes = [
+      // Scene 1 (index 0) - Storage Room Intro
+      {
+        id: 1,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/Group 1.webp',
+        sunitaPose: 'assets/hydroponics/CharacterPoses/Sunita_Williams_Wave.webp',
+        astronaut: true,
+        speaker: 'sunita',
+        text: "Welcome back, Rookie! Your first lunar soil experiment starts now."
+      },
+      // Scene 2 (index 1) - Regolith + Hydroponics Card
+      {
+        id: 2,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/Group 1.webp',
+        sunitaPose: 'assets/hydroponics/CharacterPoses/Sunita_Williams_Present2.webp',
+        astronaut: true,
+        showCard: true,
+        speaker: 'sunita',
+        text: "Scientists have been exploring ways to grow food on the Moon. Today, you'll help us test a special growing system using <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-regolith')\">treated lunar regolith</span> and <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-2')\">hydroponic nutrients</span>."
+      },
+      // Scene 3 (index 2) - Collect Regolith
+      {
+        id: 3,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/Group 1.webp',
+        sunitaPose: 'assets/hydroponics/CharacterPoses/Sunita_Williams_Present2.webp',
+        astronaut: true,
+        speaker: 'sunita',
+        text: "So let's collect some <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-regolith')\">regolith</span>."
+      },
+      // Scene 4 (index 3) - Airlock Extreme Danger
+      {
+        id: 4,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/image 128.webp',
+        sunitaPose: null,
+        astronaut: false,
+        airlockCharacters: true,
+        speaker: 'sunita',
+        text: "But first, why is lunar soil marked <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-3')\">EXTREME DANGER</span>?"
+      },
+      // Scene 5 (index 4) - Sharp glass particles
+      {
+        id: 5,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/image 128.webp',
+        sunitaPose: null,
+        astronaut: false,
+        airlockCharacters: true,
+        speaker: 'sunita',
+        text: "Its <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-5')\">sharp glass particles</span> can damage your lungs if inhaled,"
+      },
+      // Scene 6 (index 5) - Surface Regolith Collection (Visual Scene)
+      {
+        id: 6,
+        type: 'visual',
+        bg: 'assets/hydroponics/image 132.webp',
+        sunitaPose: null,
+        astronaut: false,
+        toxicOverlays: true,
+        speaker: null,
+        text: ""
+      },
+      // Scene 7 (index 6) - Chromium & Reactive Iron
+      {
+        id: 7,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/image 132.webp',
+        sunitaPose: null,
+        astronaut: false,
+        toxicOverlays: true,
+        speaker: 'sunita',
+        text: "while <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-5')\">chromium compounds and reactive iron particles</span> may pose health risks. Always use proper protection when handling regolith!"
+      },
+      // Scene 8 (index 7) - Hydroponics Lab Seeding
+      {
+        id: 8,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/Astronaut Tending Hydroponic Garden.webp',
+        sunitaPose: null,
+        astronaut: false,
+        speaker: 'sunita',
+        text: "But don't worry, Rookie! You'll prepare the regolith safely,"
+      },
+      // Scene 9 (index 8) - Watering & Instructions
+      {
+        id: 9,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/Astronaut Tending Neon Hydroponics.webp',
+        sunitaPose: null,
+        astronaut: false,
+        speaker: 'sunita',
+        text: "add water and nutrients, and plant your seeds. Following the safety instructions carefully, let's see if we can grow food on the Moon!"
+      },
+      // Scene 10 (index 9) - Press START Button for Timelapse
+      {
+        id: 10,
+        type: 'start_button',
+        bg: 'assets/hydroponics/Astronaut Tending Neon Hydroponics.webp',
+        sunitaPose: null,
+        astronaut: false,
+        speaker: 'sunita',
+        text: "Now press start for the timelapse!"
+      },
+      // Scene 11 (index 10) - Handled dynamically by initiateTimelapse()
+      // Scene 12 (index 11) - Day 5 Observation
+      {
+        id: 12,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/3.webp',
+        sunitaPose: null,
+        astronaut: false,
+        hudDays: '5 Days Passed',
+        hudEarth: true,
+        speaker: 'sunita',
+        text: "Good work, Rookie! Compared with Earth-soil plants, <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-7')\">lunar-regolith plants were smaller</span> and showed signs of stress."
+      },
+      // Scene 13 (index 12) - Astro Bee Question 1 (Plant Size)
+      {
+        id: 13,
+        type: 'question',
+        bg: 'assets/hydroponics/3.webp',
+        hudDays: '5 Days Passed',
+        hudEarth: true,
+        question: {
+          prompt: "Q1. Observe the plants and select their size:",
+          options: ["Normal", "Small", "Large"],
+          correctIndex: 1
+        }
+      },
+      // Scene 14 (index 13) - Day 15 Observation (Reddish leaves)
+      {
+        id: 14,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/5.webp',
+        sunitaPose: null,
+        astronaut: false,
+        hudDays: '15 Days Passed',
+        hudEarth: true,
+        speaker: 'sunita',
+        text: "Look closely! Some leaves are turning reddish. Earth-based experiments also found <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-7')\">reddish pigmentation in plants grown in lunar regolith</span>, possibly due to stress."
+      },
+      // Scene 15 (index 14) - Astro Bee Question 2 (Leaf Color)
+      {
+        id: 15,
+        type: 'question',
+        bg: 'assets/hydroponics/5.webp',
+        hudDays: '15 Days Passed',
+        hudEarth: true,
+        question: {
+          prompt: "Q2. Select the leaf color:",
+          options: ["Green", "Slightly Red", "Gray"],
+          correctIndex: 1
+        }
+      },
+      // Scene 16 (index 15) - Day 23 Observation (Stress)
+      {
+        id: 16,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/6.webp',
+        sunitaPose: null,
+        astronaut: false,
+        hudDays: '23 Days Passed',
+        hudEarth: true,
+        speaker: 'sunita',
+        text: "Lunar regolith lacks organic matter and has physical and chemical properties that can challenge plant roots and nutrient uptake, which stressed plants as observed in Earth-based experiments."
+      },
+      // Scene 17 (index 16) - Astro Bee Question 3 (Stress Level)
+      {
+        id: 17,
+        type: 'question',
+        bg: 'assets/hydroponics/6.webp',
+        hudDays: '23 Days Passed',
+        hudEarth: true,
+        question: {
+          prompt: "Q3. How stressed do the plants look?",
+          options: ["Low", "Moderate", "High"],
+          correctIndex: 2
+        }
+      },
+      // Scene 18 (index 17) - 2022 Apollo Study
+      {
+        id: 18,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/6.webp',
+        sunitaPose: null,
+        astronaut: false,
+        hudDays: '23 Days Passed',
+        speaker: 'sunita',
+        text: "In a 2022 study, scientists grew <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-9')\">Arabidopsis plants in real lunar samples</span> from Apollo missions. After 20 days, the plants were generally smaller and developed more slowly than controls grown in lunar soil simulant."
+      },
+      // Scene 19 (index 18) - Lab Report Gene Activity
+      {
+        id: 19,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/Final Analysis_ Healthy Plant Lab Report.webp',
+        sunitaPose: null,
+        astronaut: false,
+        speaker: 'sunita',
+        text: "Their <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-10')\">gene activity</span> also revealed responses associated with salt, metals, and oxidative stress."
+      },
+      // Scene 20 (index 19) - Astro Bee Question 4 (Growth Rate)
+      {
+        id: 20,
+        type: 'question',
+        bg: 'assets/hydroponics/Final Analysis_ Healthy Plant Lab Report.webp',
+        question: {
+          prompt: "Q4. How was the growth rate?",
+          options: ["Slow", "Moderate", "Fast"],
+          correctIndex: 0
+        }
+      },
+      // Scene 21 (index 20) - Astro Bee Concluding Report
+      {
+        id: 21,
+        type: 'dialogue',
+        bg: 'assets/hydroponics/Final Analysis_ Healthy Plant Lab Report.webp',
+        speaker: 'astrobee',
+        text: "Thank you for your report! Your observations will help humanity learn more about lunar conditions."
+      }
+    ];
+
+    /* ==========================================================================
+       State Management
+       ========================================================================== */
+    let currentSceneIndex = 0;
+    let isTypewriterActive = false;
+    let typewriterTimer = null;
+    let visualSceneTimer = null;
+    let fullCurrentText = "";
+    let activeDialogueTextEl = null;
+
+    let totalQuestions = 4;
+    let correctAnswersCount = 0;
+    let questionLocked = false;
+    let questionAdvanceTimer = null;
+    const correctQuestionSet = new Set();
+
+    // DOM References
+    const bgLayer = document.getElementById('bgLayer');
+    const darkOverlay = document.getElementById('darkOverlay');
+    const charSunita = document.getElementById('charSunita');
+    const sunitaImg = document.getElementById('sunitaImg');
+    const charAstronaut = document.getElementById('charAstronaut');
+    const airlockCharacters = document.getElementById('airlockCharacters');
+    const toxicSurfaceOverlays = document.getElementById('toxicSurfaceOverlays');
+    const regolithCard = document.getElementById('regolithCard');
+    const startButtonContainer = document.getElementById('startButtonContainer');
+    const timelapseOverlay = document.getElementById('timelapseOverlay');
+    const timelapseCounter = document.getElementById('timelapseCounter');
+    const timelapseFill = document.getElementById('timelapseFill');
+    const hudDaysBadge = document.getElementById('hudDaysBadge');
+    const hudDaysText = document.getElementById('hudDaysText');
+    const hudEarthCallout = document.getElementById('hudEarthCallout');
+
+    const questionWrapper = document.getElementById('questionWrapper');
+    const questionPrompt = document.getElementById('questionPrompt');
+    const questionOptionsGroup = document.getElementById('questionOptionsGroup');
+
+    const dialogueWrapper = document.getElementById('dialogueWrapper');
+    const dialogueBoxSunita = document.getElementById('dialogueBoxSunita');
+    const dialogueTextSunita = document.getElementById('dialogueTextSunita');
+    const dialogueBoxAstroBee = document.getElementById('dialogueBoxAstroBee');
+    const dialogueTextAstroBee = document.getElementById('dialogueTextAstroBee');
+
+    const missionCompleteOverlay = document.getElementById('missionCompleteOverlay');
+    const circleScoreNum = document.getElementById('circleScoreNum');
+    const scoreCircleProgress = document.getElementById('scoreCircleProgress');
+
+    /* ==========================================================================
+       Typewriter Effect with Pixel-Accurate Auto-Fitting (Matches Power Mission)
+       ========================================================================== */
+    function fitDialogueText(textEl, fullStr) {
+      if (!textEl || !fullStr) return;
+      const container = textEl.parentElement;
+      if (!container) return;
+      textEl.style.fontSize = '';
+      textEl.style.lineHeight = '';
+      const prevHtml = textEl.innerHTML;
+      textEl.innerHTML = fullStr;
+      const maxH = container.clientHeight - 4;
+      if (maxH > 16) {
+        let sizePx = parseFloat(window.getComputedStyle(textEl).fontSize) || 20;
+        let lh = 1.12;
+        textEl.style.lineHeight = String(lh);
+        const minSize = (textEl === dialogueTextAstroBee) ? 18.5 : 10.5;
+        while (textEl.scrollHeight > maxH && sizePx > minSize) {
+          sizePx -= 0.5;
+          if (sizePx < 15) lh = 1.04;
+          textEl.style.fontSize = sizePx + 'px';
+          textEl.style.lineHeight = String(lh);
+        }
+      }
+      textEl.innerHTML = prevHtml;
+    }
+
+    window.addEventListener('resize', () => {
+      if (activeDialogueTextEl && fullCurrentText) {
+        fitDialogueText(activeDialogueTextEl, fullCurrentText);
+      }
+    });
+
+    function startTypewriter(text) {
+      if (typewriterTimer) clearInterval(typewriterTimer);
+      fullCurrentText = text;
+      isTypewriterActive = true;
+      if (!activeDialogueTextEl) activeDialogueTextEl = dialogueTextSunita;
+
+      activeDialogueTextEl.innerHTML = "";
+      fitDialogueText(activeDialogueTextEl, text);
+      let charIndex = 0;
+      typewriterTimer = setInterval(() => {
+        if (charIndex < text.length) {
+          if (text.charAt(charIndex) === '<') {
+            const closeIdx = text.indexOf('>', charIndex);
+            charIndex = closeIdx !== -1 ? closeIdx + 1 : charIndex + 1;
+          } else {
+            charIndex++;
+          }
+          activeDialogueTextEl.innerHTML = text.slice(0, charIndex);
+          if (charIndex % 3 === 0) audio.playTypewriterClick();
+        } else {
+          clearInterval(typewriterTimer);
+          typewriterTimer = null;
+          isTypewriterActive = false;
+        }
+      }, 16);
+    }
+
+    function completeTypewriterEarly() {
+      if (typewriterTimer) {
+        clearInterval(typewriterTimer);
+        typewriterTimer = null;
+      }
+      if (activeDialogueTextEl) {
+        activeDialogueTextEl.innerHTML = fullCurrentText;
+      }
+      isTypewriterActive = false;
+    }
+
+    /* ==========================================================================
+       Render Current Scene
+       ========================================================================== */
+    function renderScene(index) {
+      if (index >= scenes.length) {
+        showMissionComplete();
+        return;
+      }
+
+      const scene = scenes[index];
+
+      // Update Background
+      if (scene.bg) {
+        bgLayer.style.backgroundImage = `url('${scene.bg}')`;
+      }
+
+      // Sunita Character Visibility & Pose
+      if (scene.sunitaPose) {
+        sunitaImg.src = scene.sunitaPose;
+        charSunita.classList.remove('hidden');
+      } else {
+        charSunita.classList.add('hidden');
+      }
+
+      // Astronaut Visibility
+      if (scene.astronaut) {
+        charAstronaut.classList.remove('hidden');
+      } else {
+        charAstronaut.classList.add('hidden');
+      }
+
+      // Airlock Back-view Characters (Scenes 4 & 5 - image 129 & 130)
+      if (scene.airlockCharacters) {
+        airlockCharacters.classList.remove('hidden');
+      } else {
+        airlockCharacters.classList.add('hidden');
+      }
+
+      // Toxic Regolith Overlays (Scenes 6 & 7 - R.png & tOXIC_cOMPONENTS.webp)
+      if (scene.toxicOverlays) {
+        toxicSurfaceOverlays.classList.remove('hidden');
+      } else {
+        toxicSurfaceOverlays.classList.add('hidden');
+      }
+
+      // Regolith Card (Scene 2)
+      if (scene.showCard) {
+        regolithCard.classList.remove('hidden');
+      } else {
+        regolithCard.classList.add('hidden');
+      }
+
+      // Interactive START Button (Scene 10)
+      if (scene.type === 'start_button') {
+        startButtonContainer.classList.remove('hidden');
+      } else {
+        startButtonContainer.classList.add('hidden');
+      }
+
+      // HUD Badges
+      if (scene.hudDays) {
+        hudDaysText.textContent = scene.hudDays;
+        hudDaysBadge.classList.remove('hidden');
+      } else {
+        hudDaysBadge.classList.add('hidden');
+      }
+
+      if (scene.hudEarth) {
+        hudEarthCallout.classList.remove('hidden');
+      } else {
+        hudEarthCallout.classList.add('hidden');
+      }
+
+      // Hide Questions & Dialogues by default
+      questionWrapper.classList.add('hidden');
+      dialogueWrapper.classList.add('hidden');
+      dialogueBoxSunita.classList.add('hidden');
+      dialogueBoxAstroBee.classList.add('hidden');
+
+      if (scene.type === 'question') {
+        renderQuestion(scene.question);
+      } else if (scene.type === 'start_button') {
+        // Scene 10: Pure start button view - hide dialogue bar and skip button completely
+        dialogueWrapper.classList.add('hidden');
+        dialogueBoxSunita.classList.add('hidden');
+        dialogueBoxAstroBee.classList.add('hidden');
+      } else if (scene.type === 'visual') {
+        // Scene 6 visual display - auto-fades up to next scene without waiting for click
+        dialogueWrapper.classList.add('hidden');
+        if (visualSceneTimer) clearTimeout(visualSceneTimer);
+        visualSceneTimer = setTimeout(() => {
+          advanceNextScene();
+        }, 2600);
+      } else {
+        // Standard Dialogue Scene
+        dialogueWrapper.classList.remove('hidden');
+        if (scene.speaker === 'astrobee') {
+          dialogueBoxAstroBee.classList.remove('hidden');
+          activeDialogueTextEl = dialogueTextAstroBee;
+        } else {
+          dialogueBoxSunita.classList.remove('hidden');
+          activeDialogueTextEl = dialogueTextSunita;
+        }
+        startTypewriter(scene.text);
+      }
+    }
+
+    /* ==========================================================================
+       Astro Bee Interactive Questions
+       ========================================================================== */
+    function renderQuestion(q) {
+      if (questionAdvanceTimer) {
+        clearTimeout(questionAdvanceTimer);
+        questionAdvanceTimer = null;
+      }
+      questionLocked = false;
+      questionPrompt.textContent = q.prompt;
+      questionOptionsGroup.innerHTML = "";
+
+      q.options.forEach((optText, optIdx) => {
+        const letter = String.fromCharCode(65 + optIdx);
+        const row = document.createElement('div');
+        row.className = 'mcq-option-item';
+        row.innerHTML = `
+          <div class="mcq-checkbox" id="check_${optIdx}"></div>
+          <span class="mcq-option-text">${letter}. ${optText}</span>
+        `;
+        row.onclick = () => handleOptionSelected(optIdx, q.correctIndex, row);
+        questionOptionsGroup.appendChild(row);
+      });
+
+      questionWrapper.classList.remove('hidden');
+    }
+
+    function handleOptionSelected(selectedIndex, correctIndex, rowEl) {
+      if (questionLocked || rowEl.classList.contains('locked')) return;
+      questionLocked = true;
+
+      const allItems = questionOptionsGroup.querySelectorAll('.mcq-option-item');
+      allItems.forEach(el => el.classList.add('locked'));
+
+      const checkbox = rowEl.querySelector('.mcq-checkbox');
+      if (checkbox) checkbox.classList.add('checked');
+
+      rowEl.classList.add('state-correct');
+      audio.playCorrect();
+      correctQuestionSet.add(currentSceneIndex);
+      correctAnswersCount = correctQuestionSet.size;
+      if (questionAdvanceTimer) clearTimeout(questionAdvanceTimer);
+      questionAdvanceTimer = setTimeout(() => {
+        questionAdvanceTimer = null;
+        proceedAfterQuestion();
+      }, 950);
+    }
+
+    function proceedAfterQuestion() {
+      questionWrapper.classList.add('hidden');
+      const scene = scenes[currentSceneIndex];
+      if (scene && scene.id === 13) {
+        // Day 5 question completed -> Day 15 Timelapse
+        runTimelapse(5, 15, () => {
+          advanceNextScene(); // Lands on Scene 14 (Day 15)
+        });
+      } else if (scene && scene.id === 15) {
+        // Day 15 question completed -> Day 23 Timelapse
+        runTimelapse(15, 23, () => {
+          advanceNextScene(); // Lands on Scene 16 (Day 23)
+        });
+      } else {
+        advanceNextScene();
+      }
+    }
+
+    /* ==========================================================================
+       Scenes 10, 11, 14, 16: Animated Timelapse UI
+       ========================================================================== */
+    function runTimelapse(fromDay, toDay, callback) {
+      timelapseOverlay.classList.add('active');
+      audio.playDialogueAdvance();
+
+      timelapseCounter.textContent = `DAY ${fromDay}`;
+      timelapseFill.style.width = '0%';
+
+      const totalSteps = 24;
+      let step = 0;
+
+      const timelapseInterval = setInterval(() => {
+        step++;
+        const pct = Math.min(100, Math.round((step / totalSteps) * 100));
+        timelapseFill.style.width = `${pct}%`;
+
+        const dayVal = Math.floor(fromDay + (step / totalSteps) * (toDay - fromDay));
+        timelapseCounter.textContent = `DAY ${dayVal}`;
+        audio.playTimelapseTick();
+
+        if (step >= totalSteps) {
+          clearInterval(timelapseInterval);
+          timelapseCounter.textContent = `DAY ${toDay}`;
+          setTimeout(() => {
+            timelapseOverlay.classList.remove('active');
+            if (callback) callback();
+          }, 450);
+        }
+      }, 55);
+    }
+
+    function initiateTimelapse() {
+      startButtonContainer.classList.add('hidden');
+      runTimelapse(0, 5, () => {
+        advanceNextScene(); // Lands on Scene 12 (Day 5)
+      });
+    }
+
+    /* ==========================================================================
+       Navigation & Flow Control
+       ========================================================================== */
+    function handleDialogueClick() {
+      if (isTypewriterActive) {
+        completeTypewriterEarly();
+      } else {
+        if (!missionCompleteOverlay.classList.contains('hidden')) {
+          dialogueWrapper.classList.add('hidden');
+          return;
+        }
+        advanceNextScene();
+      }
+    }
+
+    function handleActionBtnClick() {
+      if (isTypewriterActive) {
+        completeTypewriterEarly();
+      } else {
+        if (!missionCompleteOverlay.classList.contains('hidden')) {
+          dialogueWrapper.classList.add('hidden');
+          return;
+        }
+        advanceNextScene();
+      }
+    }
+
+    function advanceNextScene() {
+      if (visualSceneTimer) {
+        clearTimeout(visualSceneTimer);
+        visualSceneTimer = null;
+      }
+      audio.playDialogueAdvance();
+      currentSceneIndex++;
+      renderScene(currentSceneIndex);
+    }
+
+    // Click anywhere on viewport for visual scene (Scene 6)
+    document.getElementById('gameViewport').addEventListener('click', (e) => {
+      if (currentSceneIndex === 5) { // Scene 6
+        advanceNextScene();
+      }
+    });
+
+    /* ==========================================================================
+       Mission Complete
+       ========================================================================== */
+    function showMissionComplete() {
+      audio.playFanfare();
+
+      // Calculate score based on 4 questions (strictly clamped 0-100%)
+      const finalScorePct = Math.min(100, Math.max(0, Math.round((correctAnswersCount / totalQuestions) * 100)));
+      circleScoreNum.textContent = `${finalScorePct}%`;
+
+      const circumference = 314.16;
+      const offset = circumference - (circumference * finalScorePct) / 100;
+      scoreCircleProgress.style.strokeDashoffset = offset;
+
+      if (finalScorePct >= 80) {
+        scoreCircleProgress.style.stroke = '#22c55e';
+        circleScoreNum.style.color = '#22c55e';
+        circleScoreNum.style.textShadow = '0 0 14px rgba(34, 197, 94, 0.85)';
+      } else if (finalScorePct >= 40) {
+        scoreCircleProgress.style.stroke = '#fdcb0e';
+        circleScoreNum.style.color = '#fdcb0e';
+        circleScoreNum.style.textShadow = '0 0 14px rgba(253, 203, 14, 0.85)';
+      } else {
+        scoreCircleProgress.style.stroke = '#ef4444';
+        circleScoreNum.style.color = '#ef4444';
+        circleScoreNum.style.textShadow = '0 0 14px rgba(239, 68, 68, 0.85)';
+      }
+
+      // Save unlock status in localStorage so mission 2.2 is permanently completed
+      try {
+        localStorage.setItem('moonfall_mission_2_2_completed', 'true');
+        localStorage.setItem('moonfall_mission_2_2_score', finalScorePct);
+      } catch (e) { }
+
+      missionCompleteOverlay.classList.remove('hidden');
+
+      // Astro Bee concluding dialogue at bottom dock
+      dialogueWrapper.classList.remove('hidden');
+      dialogueBoxSunita.classList.add('hidden');
+      dialogueBoxAstroBee.classList.remove('hidden');
+      activeDialogueTextEl = dialogueTextAstroBee;
+
+      const completeMsg = "Mission accomplished! Your <span class=\"dialogue-ref-link\" onclick=\"event.stopPropagation(); window.openSidebarCard('card-hydro-1')\">lunar agriculture research</span> brings us one step closer to sustainable crops on the Moon!";
+      startTypewriter(completeMsg);
+    }
+
+    function restartMission() {
+      if (questionAdvanceTimer) {
+        clearTimeout(questionAdvanceTimer);
+        questionAdvanceTimer = null;
+      }
+      currentSceneIndex = 0;
+      correctAnswersCount = 0;
+      questionLocked = false;
+      correctQuestionSet.clear();
+      missionCompleteOverlay.classList.add('hidden');
+      renderScene(0);
+      if (window.replayEntryTransition) {
+        window.replayEntryTransition();
+      }
+    }
+
+    // =========================================================================
+    // Mission Entry Transition Controller
+    // =========================================================================
+    let entryTransitionTimer = null;
+    let entryTransitionDone = false;
+
+    function initEntryTransition() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('skipIntro') === 'true' || urlParams.has('scene')) {
+        const trans = document.getElementById("entryTransition");
+        if (trans) trans.classList.add("dismissed");
+        entryTransitionDone = true;
+        return;
+      }
+      const trans = document.getElementById("entryTransition");
+      if (!trans) return;
+      entryTransitionDone = false;
+      trans.classList.remove("doors-open", "dismissed");
+
+      // Wait for BOTH minimum airlock scan (500ms) AND Scene 1 background decode (max 1300ms fallback)
+      let minTimeDone = false;
+      let bgLoaded = false;
+      const tryOpen = () => {
+        if (minTimeDone && bgLoaded) openEntryTransition();
+      };
+      entryTransitionTimer = setTimeout(() => {
+        minTimeDone = true;
+        tryOpen();
+      }, 500);
+      const firstBg = (scenes[currentSceneIndex] && scenes[currentSceneIndex].bg) || 'assets/hydroponics/Group 1.webp';
+      const probe = new Image();
+      probe.onload = probe.onerror = () => {
+        bgLoaded = true;
+        tryOpen();
+      };
+      probe.src = firstBg;
+      setTimeout(() => {
+        bgLoaded = true;
+        tryOpen();
+      }, 1300);
+    }
+
+    function openEntryTransition() {
+      const trans = document.getElementById("entryTransition");
+      if (!trans || entryTransitionDone) return;
+      
+      if (typeof MOONFALL_ASSETS !== "undefined" && MOONFALL_ASSETS.playAirlockChime) {
+        MOONFALL_ASSETS.playAirlockChime();
+      }
+
+      trans.classList.add("doors-open");
+      entryTransitionTimer = setTimeout(() => {
+        trans.classList.add("dismissed");
+        entryTransitionDone = true;
+      }, 800);
+    }
+
+    function dismissEntryTransition() {
+      if (entryTransitionTimer) clearTimeout(entryTransitionTimer);
+      openEntryTransition();
+    }
+
+    window.replayEntryTransition = function() {
+      const trans = document.getElementById("entryTransition");
+      if (!trans) return;
+      entryTransitionDone = false;
+      trans.classList.remove("doors-open", "dismissed");
+      const bar = trans.querySelector(".entry-scan-fill");
+      if (bar) {
+        bar.style.animation = "none";
+        void bar.offsetWidth;
+        bar.style.animation = "entry-scan 0.5s ease-out forwards";
+      }
+      if (entryTransitionTimer) clearTimeout(entryTransitionTimer);
+      entryTransitionTimer = setTimeout(() => {
+        openEntryTransition();
+      }, 550);
+    };
+
+    function returnToBase() {
+      try { sessionStorage.setItem('moonfall_landed', 'true'); } catch (e) { }
+      window.location.href = 'index.html?return=base';
+    }
+
+    function goToNextMission() {
+      window.location.href = '5.1_Radiation_mission.html';
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        handleDialogueClick();
+      }
+    });
+
+    // Start on DOMContentLoaded
+    window.addEventListener('DOMContentLoaded', () => {
+      initEntryTransition();
+      const urlParams = new URLSearchParams(window.location.search);
+      const sceneParam = urlParams.get('scene');
+      if (sceneParam !== null) {
+        const parsed = parseInt(sceneParam, 10);
+        if (!isNaN(parsed) && parsed >= 0 && parsed < scenes.length) {
+          currentSceneIndex = parsed;
+        }
+      }
+      renderScene(currentSceneIndex);
+
+      // Non-blocking background asset preloader for later scenes (prevents Scene 1 bandwidth starvation)
+      const deferredAssets = [
+        'assets/hydroponics/CharacterPoses/Sunita_Williams_Present2.webp',
+        'assets/hydroponics/Frame 13.webp',
+        'assets/hydroponics/image 128.webp',
+        'assets/hydroponics/image 129.webp',
+        'assets/hydroponics/image 130.webp',
+        'assets/hydroponics/image 132.webp',
+        'assets/hydroponics/R.webp',
+        'assets/hydroponics/tOXIC_cOMPONENTS.webp',
+        'assets/hydroponics/Astronaut Tending Hydroponic Garden.webp',
+        'assets/hydroponics/Astronaut Tending Neon Hydroponics.webp',
+        'assets/hydroponics/3.webp',
+        'assets/hydroponics/5.webp',
+        'assets/hydroponics/6.webp',
+        'assets/hydroponics/Final Analysis_ Healthy Plant Lab Report.webp',
+        'assets/scene 3/Frame 6.webp',
+        'assets/scene 3/Frame 7.webp',
+        'assets/scene 3/Pragyan_ShivShakti_Neutral.webp'
+      ];
+      setTimeout(() => {
+        let idx = 0;
+        function preloadNext() {
+          if (idx >= deferredAssets.length) return;
+          const img = new Image();
+          img.onload = img.onerror = () => setTimeout(preloadNext, 40);
+          img.src = deferredAssets[idx++];
+        }
+        preloadNext();
+      }, 400);
+    });
+  </script>
+
+  <!-- Astro Bee Interactive LLM Chatbot Widget -->
+  <script src="astrobee/astrobee.js" data-api="https://astro-bee.mdrafiurrahman123098.workers.dev"
+    data-mount="#gameViewport" data-avatar="assets/scene 3/Pragyan_ShivShakti_Neutral.webp"
+    data-badge="assets/scene 3/Frame 7.webp" defer></script>
+  <script src="astrobee/moonfall.js" defer></script>
+  <!-- Modular Explore & Resource Sidebar -->
+  <script src="sidebar.js" data-section="hydroponics" defer></script>
+</body>
+
+</html>
